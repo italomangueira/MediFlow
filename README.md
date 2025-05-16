@@ -10,7 +10,7 @@ MediFlow is a Mediator Based Communication System
 - Supports commands and command handlers for request-response communication.
 
 ## Installation
-You can install the LightMediator NuGet package using the following command:
+You can install the MediFlow NuGet package using the following command:
 
 ```bash
 dotnet add package MediFlow
