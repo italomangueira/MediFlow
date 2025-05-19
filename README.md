@@ -16,6 +16,12 @@ You can install the MediFlow NuGet package using the following command:
 dotnet add package MediFlow
 ```
 
+#Basic implementation of mediflow using clean architecture
+
+```bash
+https://github.com/italomangueira/CleanArchComMediFlow
+```
+
 ## Usage
 
 To reference only the contracts for SimpleMediator, which includes:
@@ -40,18 +46,18 @@ Install-Package Microsoft.Extensions.DependencyInjection.Abstractions
 #### 1. Define the Request and Notification
 
 ```csharp
-public class CreateCustomerCommand : IRequest<string>
+public class CreateProductCommand : IRequest<string>
 {
     public string Title { get; set; }
 }
 
-public class CustomerCreatedEvent : INotification
+public class ProductCreatedEvent : INotification
 {
-    public Guid CustomerId { get; }
+    public Guid ProductId { get; }
 
-    public CustomerCreatedEvent(Guid customerId)
+    public ProductCreatedEvent(Guid productId)
     {
-        CustomerId = customerId;
+        ProductId = productId;
     }
 }
 ```
@@ -61,23 +67,23 @@ public class CustomerCreatedEvent : INotification
 #### 2. Implement the Handlers
 
 ```csharp
-public class CreateCustomerHandler : IRequestHandler<CreateCustomerCommand, string>
+public class CreateProductHandler : IRequestHandler<CreateProductCommand, string>
 {
     private readonly IMediFlow _mediator;
 
-    public CreateCustomerHandler(IMediFlow mediator)
+    public CreateProductHandler(IMediFlow mediator)
     {
         _mediator = mediator;
     }
 
-    public async Task<string> Handle(CreateCustomerCommand request, CancellationToken cancellationToken)
+    public async Task<string> Handle(CreateProductCommand request, CancellationToken cancellationToken)
     {
         var id = Guid.NewGuid();
 
         // Simulate persistence...
 
         // Publish event
-        await _mediator.Publish(new CustomerCreatedEvent(id), cancellationToken);
+        await _mediator.Publish(new ProductCreatedEvent(id), cancellationToken);
 
         return $"Customer '{request.Title}' created with ID {id}";
     }
@@ -85,9 +91,9 @@ public class CreateCustomerHandler : IRequestHandler<CreateCustomerCommand, stri
 
 public class SendWelcomeEmailHandler : INotificationHandler<CustomerCreatedEvent>
 {
-    public Task Handle(CustomerCreatedEvent notification, CancellationToken cancellationToken)
+    public Task Handle(ProductCreatedEvent notification, CancellationToken cancellationToken)
     {
-        Console.WriteLine($"Sending welcome email to customer {notification.CustomerId}");
+        Console.WriteLine($"Sending welcome email to customer {notification.ProductId}");
         return Task.CompletedTask;
     }
 }
@@ -100,16 +106,16 @@ public class SendWelcomeEmailHandler : INotificationHandler<CustomerCreatedEvent
 You can register everything manually if you want full control:
 
 ```csharp
-services.AddSingleton<IMediFlow, Mediflow>();
+services.AddSingleton<IMediFlow, MediFlow>();
 
-services.AddTransient<IRequestHandler<CreateCustomerCommand, string>, CreateCustomerHandler>();
-services.AddTransient<INotificationHandler<CustomerCreatedEvent>, SendWelcomeEmailHandler>();
+services.AddTransient<IRequestHandler<CreateProductCommand, string>, CreateProductHandler>();
+services.AddTransient<INotificationHandler<ProductCreatedEvent>, SendWelcomeEmailHandler>();
 ```
 
 Or use assembly scanning with:
 
 ```csharp
-services.AddSimpleMediator();
+builder.Services.AddMediFlow();
 ```
 
 ---
@@ -126,9 +132,9 @@ public class CustomerAppService
         _mediator = mediator;
     }
 
-    public async Task<string> CreateCustomer(string title)
+    public async Task<string> CreateProduct(string title)
     {
-        return await _mediator.Send(new CreateCustomerCommand { Title = title });
+        return await _mediator.Send(new CreateProductCommand { Title = title });
     }
 }
 ```
@@ -137,9 +143,9 @@ public class CustomerAppService
 
 When the `CreateCustomer` method is called:
 
-1. `CreateCustomerHandler` handles the request
+1. `CreateProductHandler` handles the request
 2. It creates and persists the customer (simulated)
-3. It publishes a `CustomerCreatedEvent`
+3. It publishes a `ProductCreatedEvent`
 4. `SendWelcomeEmailHandler` handles the event
 
 This structure cleanly separates **commands** (which change state and return a result) from **notifications** (which communicate to the rest of the system that something happened).
