@@ -85,11 +85,11 @@ public class CreateProductHandler : IRequestHandler<CreateProductCommand, string
         // Publish event
         await _mediator.Publish(new ProductCreatedEvent(id), cancellationToken);
 
-        return $"Customer '{request.Title}' created with ID {id}";
+        return $"Product '{request.Title}' created with ID {id}";
     }
 }
 
-public class SendWelcomeEmailHandler : INotificationHandler<CustomerCreatedEvent>
+public class SendWelcomeEmailHandler : INotificationHandler<ProductCreatedEvent>
 {
     public Task Handle(ProductCreatedEvent notification, CancellationToken cancellationToken)
     {
@@ -123,7 +123,7 @@ builder.Services.AddMediFlow();
 #### 4. Execute the Flow
 
 ```csharp
-public class CustomerAppService
+public class ProductAppService
 {
     private readonly IMediFlow _mediator;
 
@@ -141,7 +141,7 @@ public class CustomerAppService
 
 ---
 
-When the `CreateCustomer` method is called:
+When the `CreateProduct` method is called:
 
 1. `CreateProductHandler` handles the request
 2. It creates and persists the customer (simulated)
